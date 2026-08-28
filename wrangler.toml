@@ -1,9 +1,26 @@
+# Cloudflare Worker serving the static Astro build (Workers static assets).
+# Deployed by Workers Builds on push to main: build `npm run build`, then
+# `npx wrangler deploy`. The `name` must match the Worker in the dashboard.
 name = "auditorsiq-blog"
-pages_build_output_dir = "dist"
+main = "worker/index.ts"
 compatibility_date = "2025-08-01"
 
-# Crawl-log dataset written by functions/_middleware.ts. Read by the
-# AuditorsIQ measurement job through the Analytics Engine SQL API.
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+# /posts/foo → /posts/foo/ (matches astro.config trailingSlash: 'always')
+html_handling = "auto-trailing-slash"
+# Serve dist/404.html with a 404 status for unknown paths.
+not_found_handling = "404-page"
+# Run the Worker before asset matching so every request (including cached
+# static hits) passes through the crawl logger in worker/index.ts.
+run_worker_first = true
+
+# Crawl-log dataset written by worker/index.ts. Read by the AuditorsIQ
+# measurement job through the Analytics Engine SQL API.
 [[analytics_engine_datasets]]
 binding = "BLOG_CRAWLS"
 dataset = "blog_crawls"
+
+[observability]
+enabled = true

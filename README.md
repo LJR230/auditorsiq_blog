@@ -9,13 +9,13 @@ The static site behind **https://blog.auditorsiq.com** — the content/search si
 - **CTA copy lives in one component** (`src/components/CtaBlock.astro`). Post bodies never contain "book a call" / "run your audit" copy.
 - **Every post cites sources.** The `sources` array in frontmatter is required and non-empty; the build fails otherwise.
 - `sitemap-index.xml`, `rss.xml`, `robots.txt` (explicitly allowing AI crawlers), and Article / FAQPage / BreadcrumbList JSON-LD are all generated.
-- `functions/_middleware.ts` is a Cloudflare Pages Function that counts hits from known AI/search crawlers into an Analytics Engine dataset (`blog_crawls`); the AuditorsIQ measurement job reads it.
+- `worker/index.ts` is the Cloudflare Worker that serves `dist/` (Workers static assets) and counts hits from known AI/search crawlers into an Analytics Engine dataset (`blog_crawls`); the AuditorsIQ measurement job reads it.
 
 ## How it deploys
 
-Cloudflare Pages, connected to this repo. Production branch `main`, build command `npm run build`, output directory `dist`, Node 22 (`.node-version`). Every push to `main` deploys; other branches get preview deployments.
+A Cloudflare **Worker with static assets** (`wrangler.toml`), built and deployed by Workers Builds from this repo: production branch `main`, build command `npm run build`, deploy command `npx wrangler deploy`, Node 22 (`.node-version`). The `name` in `wrangler.toml` must match the Worker in the dashboard (`auditorsiq-blog`); the custom domain `blog.auditorsiq.com` is attached to that Worker. Every push to `main` deploys.
 
-Optional env var on the Pages project: `PUBLIC_CF_BEACON_TOKEN` — when set, the Cloudflare Web Analytics beacon is rendered.
+Optional build-time env var on the Worker: `PUBLIC_CF_BEACON_TOKEN` — when set, the Cloudflare Web Analytics beacon is rendered.
 
 ## How posts get here
 
