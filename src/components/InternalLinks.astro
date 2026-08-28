@@ -1,0 +1,52 @@
+---
+import { postPath, type Post, type PostLinks } from '../lib/links';
+
+interface Props {
+  post: Post;
+  links: PostLinks;
+  placement: 'top' | 'bottom';
+}
+
+const { post, links, placement } = Astro.props;
+const isHub = post.data.type === 'hub';
+---
+
+{placement === 'top' && links.hub && (
+  <p class="eyebrow" style="margin-top: 4px;">
+    Part of: <a href={postPath(links.hub)}>{links.hub.data.title}</a>
+  </p>
+)}
+
+{placement === 'bottom' && isHub && links.spokes.length > 0 && (
+  <nav class="block" aria-label="In this guide">
+    <p class="block-title">In this guide</p>
+    <ul>
+      {links.spokes.map((s) => (
+        <li><a href={postPath(s)}>{s.data.title}</a> — <span style="color: var(--color-text-muted)">{s.data.description}</span></li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+{placement === 'bottom' && !isHub && (links.hub || links.related.length > 0) && (
+  <nav class="block" aria-label="Related guides">
+    {links.hub && (
+      <>
+        <p class="block-title">The complete guide</p>
+        <ul>
+          <li><a href={postPath(links.hub)}>{links.hub.data.title}</a></li>
+        </ul>
+      </>
+    )}
+    {links.related.length > 0 && (
+      <>
+        <p class="block-title" style="margin-top: 14px;">Related</p>
+        <ul>
+          {links.related.map((r) => (
+            <li><a href={postPath(r)}>{r.data.title}</a></li>
+          ))}
+        </ul>
+      </>
+    )}
+  </nav>
+)}

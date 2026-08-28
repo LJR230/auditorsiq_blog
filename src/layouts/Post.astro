@@ -1,0 +1,78 @@
+---
+import { render } from 'astro:content';
+import Base from './Base.astro';
+import CtaBlock from '../components/CtaBlock.astro';
+import InternalLinks from '../components/InternalLinks.astro';
+import Sources from '../components/Sources.astro';
+import Faq from '../components/Faq.astro';
+import { linksFor, postPath, clusterPath, clusterLabel, type Post } from '../lib/links';
+import { articleJsonLd, faqJsonLd, breadcrumbJsonLd } from '../lib/jsonld';
+
+interface Props {
+  entry: Post;
+  all: Post[];
+}
+
+const { entry, all } = Astro.props;
+const { Content } = await render(entry);
+const links = linksFor(entry, all);
+const site = Astro.site ?? new URL('https://blog.auditorsiq.com');
+const canonical = new URL(postPath(entry), site).toString();
+const clusterUrl = new URL(clusterPath(entry.data.cluster), site).toString();
+const label = clusterLabel(entry.data.cluster);
+
+const jsonLd = [
+  articleJsonLd(entry, canonical),
+  breadcrumbJsonLd(entry, links.hub, label, clusterUrl, canonical),
+  faqJsonLd(entry),
+].filter((x): x is object => Boolean(x));
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Base
+  title={entry.data.title}
+  description={entry.data.description}
+  path={postPath(entry)}
+  type="article"
+  publishedAt={entry.data.publishedAt}
+  updatedAt={entry.data.updatedAt}
+  cluster={entry.data.cluster}
+  slug={entry.id}
+  jsonLd={jsonLd}
+>
+  <article class="article">
+    <header class="article-header">
+      <p class="eyebrow">
+        <a href={clusterPath(entry.data.cluster)}>{label}</a>
+        {entry.data.type === 'hub' ? ' · Complete guide' : links.hub ? ` · Part of the guide` : ''}
+      </p>
+      <h1 class="headline">{entry.data.title}</h1>
+      <p class="subhead">{entry.data.description}</p>
+      <p class="meta">
+        <span class={`tag ${entry.data.type === 'hub' ? 'tag--hub' : ''}`}>{entry.data.type === 'hub' ? 'Hub guide' : 'Guide'}</span>
+        <span>By {entry.data.author}</span>
+        <time datetime={entry.data.publishedAt.toISOString()}>{dateFmt.format(entry.data.publishedAt)}</time>
+        {entry.data.updatedAt && <span>Updated {dateFmt.format(entry.data.updatedAt)}</span>}
+      </p>
+    </header>
+
+    {entry.data.type === 'spoke' && links.hub && (
+      <InternalLinks placement="top" post={entry} links={links} />
+    )}
+
+    <CtaBlock cluster={entry.data.cluster} slug={entry.id} label={entry.data.cta.label} variant="compact" />
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <Faq items={entry.data.faq} />
+
+    <CtaBlock cluster={entry.data.cluster} slug={entry.id} label={entry.data.cta.label} variant="full" />
+
+    <InternalLinks placement="bottom" post={entry} links={links} />
+
+    <Sources sources={entry.data.sources} />
+  </article>
+</Base>

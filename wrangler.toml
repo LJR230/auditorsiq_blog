@@ -1,0 +1,9 @@
+name = "auditorsiq-blog"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-08-01"
+
+# Crawl-log dataset written by functions/_middleware.ts. Read by the
+# AuditorsIQ measurement job through the Analytics Engine SQL API.
+[[analytics_engine_datasets]]
+binding = "BLOG_CRAWLS"
+dataset = "blog_crawls"

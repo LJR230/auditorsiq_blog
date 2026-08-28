@@ -1,0 +1,12 @@
+---
+/**
+ * Emits one JSON-LD block. Base.astro already renders the per-page objects it
+ * is given in <head>; use this component for ad-hoc objects inside a page body.
+ */
+interface Props {
+  data: object;
+}
+const { data } = Astro.props;
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(data)} />

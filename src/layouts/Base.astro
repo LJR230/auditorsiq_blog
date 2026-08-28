@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+import { buildSiteHref } from '../lib/cta';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Site-relative path with trailing slash, e.g. '/posts/foo/' */
+  path: string;
+  type?: 'website' | 'article';
+  publishedAt?: Date;
+  updatedAt?: Date;
+  /** Stamped on <body> for the first-touch attribution cookie script. */
+  cluster?: string | null;
+  slug?: string | null;
+  /** Serialized JSON-LD objects to emit in <head>. */
+  jsonLd?: object[];
+}
+
+const {
+  title,
+  description,
+  path,
+  type = 'website',
+  publishedAt,
+  updatedAt,
+  cluster = null,
+  slug = null,
+  jsonLd = [],
+} = Astro.props;
+
+const site = Astro.site ?? new URL('https://blog.auditorsiq.com');
+const canonical = new URL(path, site).toString();
+const beacon = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
+const fullTitle = path === '/' ? title : `${title} · AuditorsIQ`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="AuditorsIQ blog" href={new URL('/rss.xml', site).toString()} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#4f46e5" />
+
+    <meta property="og:site_name" content="AuditorsIQ" />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {publishedAt && <meta property="article:published_time" content={publishedAt.toISOString()} />}
+    {updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+    {jsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+
+    {beacon && (
+      <script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={`{"token": "${beacon}"}`}></script>
+    )}
+  </head>
+  <body data-cluster={cluster ?? undefined} data-slug={slug ?? undefined}>
+    <!--
+      First-touch attribution. Written once per visitor (90 days), readable by
+      auditorsiq.com because the cookie is scoped to the registrable domain.
+      The homepage reads it in JS at handle submission and sends it in the
+      request body — it is never sent to the API as a header.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          if (document.cookie.split('; ').some(function (c) { return c.indexOf('aiq_ft=') === 0; })) return; // first touch wins
+          var v = {
+            s: 'blog',
+            c: document.body.dataset.cluster || null,
+            p: document.body.dataset.slug || null,
+            l: location.pathname,
+            r: (document.referrer || '').slice(0, 200) || null,
+            t: Date.now()
+          };
+          document.cookie = 'aiq_ft=' + encodeURIComponent(JSON.stringify(v)) +
+            '; Domain=.auditorsiq.com; Path=/; Max-Age=' + (90 * 86400) + '; SameSite=Lax; Secure';
+        } catch (e) {}
+      })();
+    </script>
+
+    <div class="wrap">
+      <header class="site-header">
+        <a class="wordmark" href="/">
+          <span class="wordmark-mark">IQ</span>
+          <span class="wordmark-text">AuditorsIQ <span>· Blog</span></span>
+        </a>
+        <nav class="site-nav" aria-label="Site">
+          <a href="/">Guides</a>
+          <a href="/rss.xml">RSS</a>
+          <a class="nav-cta" href={buildSiteHref('nav')} rel="noopener">Free Instagram audit</a>
+        </nav>
+      </header>
+
+      <main>
+        <slot />
+      </main>
+
+      <footer class="site-footer">
+        <span>© {new Date().getFullYear()} AuditorsIQ. Free Instagram audits for local businesses.</span>
+        <span>
+          <a href={buildSiteHref('footer')} rel="noopener">auditorsiq.com</a>
+          &nbsp;·&nbsp;
+          <a href="/rss.xml">RSS</a>
+        </span>
+      </footer>
+    </div>
+  </body>
+</html>

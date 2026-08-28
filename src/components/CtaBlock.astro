@@ -1,0 +1,33 @@
+---
+/**
+ * The ONLY place CTA copy lives. Post bodies never contain "run your audit" /
+ * "book a call" text — the layout places this block after the intro and at
+ * the end of every post, and every link carries the post's attribution.
+ */
+import { buildCtaHref } from '../lib/cta';
+
+interface Props {
+  cluster: string;
+  slug: string;
+  label?: string;
+  variant?: 'compact' | 'full';
+}
+
+const { cluster, slug, label = 'Run your free Instagram audit', variant = 'full' } = Astro.props;
+const href = buildCtaHref(cluster, slug);
+---
+
+{variant === 'compact' ? (
+  <aside class="cta cta--compact" aria-label="Free Instagram audit">
+    <h3>Want to know how your own account measures up?</h3>
+    <p>Enter your Instagram handle and we'll review your profile, posting cadence, and engagement — then a real person sends you the findings.</p>
+    <a class="cta-button" href={href} rel="noopener">{label}</a>
+  </aside>
+) : (
+  <aside class="cta" aria-label="Free Instagram audit">
+    <h3>Get a personalized audit of your med spa's Instagram</h3>
+    <p>We look at your bio, link setup, posting frequency, content mix, and engagement rate against comparable local businesses, and send you a written report with specific things to change. No signup, about 30 seconds.</p>
+    <a class="cta-button" href={href} rel="noopener">{label}</a>
+    <small>Free. Reviewed by a person before it reaches you.</small>
+  </aside>
+)}

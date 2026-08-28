@@ -1,0 +1,18 @@
+---
+import { postPath, type Post } from '../lib/links';
+
+interface Props {
+  post: Post;
+}
+const { post } = Astro.props;
+const dateFmt = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<li class="card">
+  <p class="meta">
+    <span class={`tag ${post.data.type === 'hub' ? 'tag--hub' : ''}`}>{post.data.type === 'hub' ? 'Hub guide' : 'Guide'}</span>
+    <time datetime={post.data.publishedAt.toISOString()}>{dateFmt.format(post.data.publishedAt)}</time>
+  </p>
+  <h3><a href={postPath(post)}>{post.data.title}</a></h3>
+  <p>{post.data.description}</p>
+</li>

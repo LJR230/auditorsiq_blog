@@ -1,0 +1,25 @@
+---
+interface Source {
+  title: string;
+  url: string;
+  publisher: string | null;
+  publishedAt: string | null;
+}
+interface Props {
+  sources: Source[];
+}
+const { sources } = Astro.props;
+---
+
+<section class="block sources" aria-label="Sources">
+  <p class="block-title">Sources</p>
+  <ol>
+    {sources.map((s) => (
+      <li>
+        <a href={s.url} rel="noopener nofollow" target="_blank">{s.title}</a>
+        {s.publisher && <> — {s.publisher}</>}
+        {s.publishedAt && <> ({s.publishedAt})</>}
+      </li>
+    ))}
+  </ol>
+</section>

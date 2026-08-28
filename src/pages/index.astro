@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+import { clusterLabel, clusterPath } from '../lib/links';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()
+);
+const hubs = posts.filter((p) => p.data.type === 'hub');
+const latest = posts.slice(0, 9);
+const clusters = [...new Set(posts.map((p) => p.data.cluster))];
+---
+
+<Base
+  title="AuditorsIQ blog — practical Instagram marketing guides for local businesses"
+  description="Sourced, specific guides on Instagram marketing for med spas and other local businesses, from the team that runs free Instagram audits."
+  path="/"
+>
+  <section class="hero">
+    <p class="eyebrow">AuditorsIQ blog</p>
+    <h1 class="headline">Instagram marketing guides for local businesses, with the numbers behind them.</h1>
+    <p class="subhead">
+      Every guide cites its sources and ends with something you can change this week. Written by the team that reviews real accounts every day.
+    </p>
+  </section>
+
+  {hubs.length > 0 && (
+    <section class="section">
+      <h2 class="section-title">Complete guides</h2>
+      <p class="section-sub">Start here — each hub links to every related guide.</p>
+      <ul class="grid">
+        {hubs.map((p) => <PostCard post={p} />)}
+      </ul>
+    </section>
+  )}
+
+  <section class="section">
+    <h2 class="section-title">Latest</h2>
+    <ul class="grid">
+      {latest.map((p) => <PostCard post={p} />)}
+    </ul>
+  </section>
+
+  {clusters.length > 1 && (
+    <section class="section">
+      <h2 class="section-title">Topics</h2>
+      <ul class="grid">
+        {clusters.map((c) => (
+          <li class="card">
+            <h3><a href={clusterPath(c)}>{clusterLabel(c)}</a></h3>
+            <p>{posts.filter((p) => p.data.cluster === c).length} guides</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

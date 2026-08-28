@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { clusterLabel, clusterPath, postPath, type Post } from '../../lib/links';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  const clusters = [...new Set(posts.map((p) => p.data.cluster))];
+  return clusters.map((cluster) => ({
+    params: { cluster },
+    props: { cluster, posts: posts.filter((p) => p.data.cluster === cluster) },
+  }));
+}
+
+interface Props {
+  cluster: string;
+  posts: Post[];
+}
+const { cluster, posts } = Astro.props;
+const hub = posts.find((p) => p.data.type === 'hub') ?? null;
+const spokes = posts
+  .filter((p) => p.data.type === 'spoke')
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+const label = clusterLabel(cluster);
+const description = hub
+  ? hub.data.description
+  : `Guides on ${label.toLowerCase()} from AuditorsIQ — practical, sourced, written for owners.`;
+---
+
+<Base title={`${label} guides`} description={description} path={clusterPath(cluster)} cluster={cluster}>
+  <section class="hero">
+    <p class="eyebrow">Topic</p>
+    <h1 class="headline">{label}</h1>
+    {hub && (
+      <p class="subhead">
+        Start with the complete guide: <a href={postPath(hub)}>{hub.data.title}</a>
+      </p>
+    )}
+  </section>
+
+  {spokes.length > 0 && (
+    <section class="section">
+      <h2 class="section-title">Guides in this topic</h2>
+      <ul class="grid">
+        {hub && <PostCard post={hub} />}
+        {spokes.map((p) => <PostCard post={p} />)}
+      </ul>
+    </section>
+  )}
+</Base>
